@@ -54,7 +54,6 @@ function clones (source, bind) {
 function _clone (opts, source) {
   let target
   let type = toType(source)
-  let isObject = (typeof source === 'object')
   switch (type) {
     case 'String':
     case 'Number':
@@ -113,12 +112,12 @@ function _clone (opts, source) {
       target = new RegExp(source.source, flags)
       break
     case 'Buffer':
-      target = source.constructor(source)
+      target = new source.constructor(source)
       break
-    case 'Window': // clone of global objects
-    case 'global':
     case 'Math':
     case 'JSON':
+    case 'Window': // clone of global objects
+    case 'global':
     case 'Console':
     case 'Navigator':
     case 'Screen':
@@ -126,16 +125,15 @@ function _clone (opts, source) {
       target = _props(opts, source, target || {})
       break
     default:
-      if (/^HTML/.test(type)) {
+      if (/^HTML/.test(type)) { // handle HTMLElements
         if (source.cloneNode) {
           target = source.cloneNode(true)
         } else {
           target = source
         }
-      } else if (isObject) {
+      } else if (typeof source === 'object') { // handle other object based types
         target = _props(opts, source, target || {})
-      } else {
-        // anything else should be a primitive
+      } else { // anything else should be a primitive
         target = source
       }
   }
@@ -164,15 +162,24 @@ function _props (opts, source, target) {
       } else if ((desc = Object.getOwnPropertyDescriptor(source, key))) {
         if (desc.writable) {
           target[key] = _clone(opts, source[key])
-        } else if (desc.configurable) {
-          Object.defineProperty(target, key, desc)
+        } else {
+          try {
+            Object.defineProperty(target, key, desc)
+          } catch (e) {
+            // Safari throws with TypeError:
+            //  Attempting to change access mechanism for an unconfigurable property.
+            //  Attempting to change value of a readonly property.
+            if (!'Attempting to change'.indexOf(e.message)) {
+              throw e
+            }
+          }
         }
       }
     })
     opts.visited.pop()
     opts.cloned.pop()
   } else {
-    target = opts.cloned[idx]
+    target = opts.cloned[idx] // add reference of circularity
   }
   return target
 }

@@ -5,16 +5,18 @@ browsers:
     version: latest
     platform: Windows 10
   - name: firefox
-    version: 45, latest
-    platform: Windows 10
+    version:
+      - 45
+      - latest
   - name: safari
     version: latest
   - name: microsoftedge
     version: latest
-  - name: internet explorer
-    version: 11
-    platform: Windows 10
   - name: iphone
     version: latest
+  # Not Supported
+  # - name: internet explorer
+  #   version: 11
+  #   platform: Windows 10
   # - name: internet explorer
   #   version: 9..latest

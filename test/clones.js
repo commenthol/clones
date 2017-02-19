@@ -175,7 +175,7 @@ describe('#clone', function () {
     assert.equal(dest.fn(), source.fn() + 1)        // returning the same result
   })
 
-  describe.only('should clone the Math object', function () {
+  describe('should clone the Math object', function () {
     var inp
     var res
 
@@ -199,7 +199,7 @@ describe('#clone', function () {
           }
         } else {
           // Math constants
-          // TODO assert.equal(res[key], inp[key])
+          assert.equal(res[key], inp[key])
         }
       })
     })
@@ -262,11 +262,11 @@ describe('#clone', function () {
       div.innerHTML = 'works'
       var body = res.querySelector('body')
       assert.equal(toString.call(body), '[object HTMLBodyElement]')
-      body.append(div)
+      body.appendChild(div)
       assert.equal(body.lastChild.innerHTML, 'works')
       // element should not be part of original DOM
-      body = inp.querySelector('body')
-      assert.equal(body.lastChild.innerHTML, undefined)
+      var body0 = inp.querySelector('body')
+      assert.equal(body0.lastChild.innerHTML, undefined)
       // overwriting a function does not harm original
       res.createElement = undefined
       assert.ok(inp.createElement !== undefined)

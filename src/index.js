@@ -53,7 +53,7 @@ function clones (source, bind) {
 */
 function _clone (opts, source) {
   let target
-  let type = toString.call(source).replace(/^\[object (.*)\]$/, '$1')
+  let type = toType(source)
   let isObject = (typeof source === 'object')
   switch (type) {
     case 'String':
@@ -82,6 +82,8 @@ function _clone (opts, source) {
     case 'Uint32Array':
     case 'Float32Array':
     case 'Float64Array':
+      target = new source.constructor(source)
+      break
     case 'Array':
       target = source.map(function (item) {
         return _clone(opts, item)
@@ -92,14 +94,14 @@ function _clone (opts, source) {
       target = new Date(source)
       break
     case 'Error':
-      // EvalError
-      // InternalError
-      // RangeError
-      // ReferenceError
-      // SyntaxError
-      // TypeError
-      // URIError
-      target = new Error(source.message)
+    case 'EvalError':
+    case 'InternalError':
+    case 'RangeError':
+    case 'ReferenceError':
+    case 'SyntaxError':
+    case 'TypeError':
+    case 'URIError':
+      target = new source.constructor(source.message)
       target = _props(opts, source, target)
       target.stack = source.stack
       break
@@ -109,6 +111,9 @@ function _clone (opts, source) {
         (source.ignoreCase ? 'i' : '') +
         (source.multiline ? 'm' : '')
       target = new RegExp(source.source, flags)
+      break
+    case 'Buffer':
+      target = source.constructor(source)
       break
     case 'Window': // clone of global objects
     case 'global':
@@ -170,4 +175,11 @@ function _props (opts, source, target) {
     target = opts.cloned[idx]
   }
   return target
+}
+
+/**
+* @private
+*/
+function toType (o) {
+  return toString.call(o).replace(/^\[[a-z]+ (.*)\]$/, '$1')
 }

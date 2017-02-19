@@ -14,6 +14,7 @@ describe('#clone', function () {
     ['Boolean', true],
     ['Array', [1, '2', false], true],
     ['Uint8Array', new Uint8Array([1, 2, 3]), true],
+    ['Float32Array', new Float32Array([1.1, 2.22, 3.333]), true],
     ['Object', {a: 1, b: 2}, true],
     ['Date', new Date('1970-01-01T00:00:00'), true],
     ['RegExp', new RegExp('test', 'gim'), true]
@@ -22,19 +23,40 @@ describe('#clone', function () {
     var tcase = test[0]
     var inp = test[1]
     var isRef = test[2]
-    it('should clone ' + tcase + ' ' + JSON.stringify(inp), function () {
+    it('should clone ' + tcase, function () {
       var res = clone(inp)
       assert.deepEqual(res, inp)
+      assert.equal(toType(res), toType(inp))
       if (isRef) {
         assert.ok(res !== inp)
       }
     })
   })
 
+  if (!isBrowser) {
+    it('should clone Buffer', function () {
+      var inp = new Buffer('Hello')
+      var res = clone(inp)
+      assert.ok(res !== inp)
+      assert.equal(toType(res), toType(inp))
+      assert.equal(res.toString(), inp.toString())
+    })
+  }
+
   it('should clone Error', function () {
     var inp = new Error('boom')
     var res = clone(inp)
     assert.ok(res !== inp)
+    assert.equal(toType(res), toType(inp))
+    assert.equal(res.message, inp.message)
+    assert.equal(res.stack, inp.stack)
+  })
+
+  it('should clone TypeError', function () {
+    var inp = new TypeError('boom')
+    var res = clone(inp)
+    assert.ok(res !== inp)
+    assert.equal(toType(res), toType(inp))
     assert.equal(res.message, inp.message)
     assert.equal(res.stack, inp.stack)
   })
@@ -43,6 +65,7 @@ describe('#clone', function () {
     var inp = {a: {b: {c: 3}}}
     var res = clone(inp)
     assert.ok(res !== inp)
+    assert.equal(toType(res), toType(inp))
     assert.ok(res.a.b !== inp.a.b)
     assert.deepEqual(res.a.b, inp.a.b)
   })
@@ -60,6 +83,7 @@ describe('#clone', function () {
     var inp = [{a: 1}, {b: 2}]
     var res = clone(inp)
     assert.ok(res !== inp)
+    assert.equal(toType(res), toType(inp))
     assert.ok(res[0] !== inp[0])
     assert.deepEqual(res, inp)
   })
@@ -77,6 +101,7 @@ describe('#clone', function () {
     var inp = function () { return 42 }
     var res = clone(inp)
     assert.ok(res !== inp)
+    assert.equal(toType(res), toType(inp))
     assert.equal(res(), 42)
   })
 
@@ -150,28 +175,47 @@ describe('#clone', function () {
     assert.equal(dest.fn(), source.fn() + 1)        // returning the same result
   })
 
-  describe('should clone the Math object', function () {
-    var inp = Math
-    var res = clone(inp)
+  describe.only('should clone the Math object', function () {
+    var inp
+    var res
+
     it('should be different', function () {
+      inp = Math
+		  res = clone(inp)
       assert.ok(res !== inp)
     })
-    it('should give the same result', function () {
-      var same = -4
-      assert.strictEqual(res.cos(same), inp.cos(same))
+    it('should now be of type Object', function () {
+      assert.equal(toType(res), 'Object')
     })
     Object.getOwnPropertyNames(Math).forEach(function (key) {
       it(key, function () {
-        assert.ok(res[key] !== inp[key])
+        if (toType(res[key]) === 'Function') {
+          assert.ok(res[key] !== inp[key])
+          if (inp[key].length === 1) {
+            var same = (key === 'acosh' ? 1.2 : 0.5)
+            assert.equal(res[key](same), inp[key](same))
+          } else if (inp[key].length === 2) {
+            assert.equal(res[key](0.5, 2), inp[key](0.5, 2))
+          }
+        } else {
+          // Math constants
+          // TODO assert.equal(res[key], inp[key])
+        }
       })
     })
   })
 
   describe('should clone the JSON object', function () {
-    var inp = JSON
-    var res = clone(inp)
+    var inp
+    var res
+
     it('should be different', function () {
+      inp = JSON
+      res = clone(inp)
       assert.ok(res !== inp)
+    })
+    it('should now be of type Object', function () {
+      assert.equal(toType(res), 'Object')
     })
     it('should give the same result', function () {
       var same = '{"a":1,"b":2,"c":{"d":"three"}}'
@@ -229,3 +273,7 @@ describe('#clone', function () {
     })
   }
 })
+
+function toType (o) {
+  return toString.call(o).replace(/^\[object (.*)\]$/, '$1')
+}

@@ -30,13 +30,40 @@ module.exports = clones
 * //     '3',
 * //     [Function] ]
 */
-function clones (source, bind) {
+function clones (source, bind, target) {
   let opts = {
     bind: bind,
     visited: [],
     cloned: []
   }
-  return _clone(opts, source)
+  return _clone(opts, source, target)
+}
+
+/**
+* clones prototype function / class
+* @static
+* @param {Object} source - clone source
+* @return {Any} deep clone of `source`
+* @example
+* const clones = require('clones')
+* // clone built in `Array`
+* const C = clones.classes(Array)
+*
+* let c = new C(1,2,3)
+* // => [1, 2, 3]
+* c.reverse()
+* // => [3, 2, 1]
+*/
+clones.classes = function (source) {
+  let target = function (a, b, c, d, e, f, g, h, i) {
+    try {
+      return new (Function.prototype.bind.apply(source, [null].concat([].slice.call(arguments))))()
+    } catch (e) {
+      // Safari throws TypeError for typed Arrays
+      return new source(a, b, c, d, e, f, g, h, i) // eslint-disable-line new-cap
+    }
+  }
+  return clones(source, source, target)
 }
 
 /**
@@ -51,8 +78,7 @@ function clones (source, bind) {
 * @param {Any} source - The object to clone
 * @return {Any} deep clone of `source`
 */
-function _clone (opts, source) {
-  let target
+function _clone (opts, source, target) {
   let type = toType(source)
   switch (type) {
     case 'String':
@@ -66,9 +92,15 @@ function _clone (opts, source) {
       target = source
       break
     case 'Function':
-      target = function () {
+      if (!target) {
         let _bind = (opts.bind === null ? null : opts.bind || source)
-        return source.apply(_bind, arguments)
+        if (opts.wrapFn) {
+          target = function () {
+            return source.apply(_bind, arguments)
+          }
+        } else {
+          target = source.bind(_bind)
+        }
       }
       target = _props(opts, source, target)
       break
@@ -114,10 +146,13 @@ function _clone (opts, source) {
     case 'Buffer':
       target = new source.constructor(source)
       break
+    case 'Window': // clone of global object
+    case 'global':
+      opts.wrapFn = true
+      target = _props(opts, source, target || {})
+      break
     case 'Math':
     case 'JSON':
-    case 'Window': // clone of global objects
-    case 'global':
     case 'Console':
     case 'Navigator':
     case 'Screen':
@@ -156,24 +191,18 @@ function _props (opts, source, target) {
     opts.visited.push(source)
     opts.cloned.push(target)
     Object.getOwnPropertyNames(source).forEach(function (key) {
-      var desc
       if (key === 'prototype') {
         target[key] = Object.create(source[key])
-      } else if ((desc = Object.getOwnPropertyDescriptor(source, key))) {
-        if (desc.writable) {
-          target[key] = _clone(opts, source[key])
-        } else {
-          try {
-            Object.defineProperty(target, key, desc)
-          } catch (e) {
-            // Safari throws with TypeError:
-            //  Attempting to change access mechanism for an unconfigurable property.
-            //  Attempting to change value of a readonly property.
-            if (!'Attempting to change'.indexOf(e.message)) {
-              throw e
-            }
+        Object.getOwnPropertyNames(source[key]).forEach(function (p) {
+          if (p !== 'constructor') {
+            _descriptor(opts, source[key], target[key], p)
+          // } else {
+          //   target[key][p] = target
+          //   Safari may throw here with TypeError: Attempted to assign to readonly property.
           }
-        }
+        })
+      } else {
+        _descriptor(opts, source, target, key)
       }
     })
     opts.visited.pop()
@@ -182,6 +211,29 @@ function _props (opts, source, target) {
     target = opts.cloned[idx] // add reference of circularity
   }
   return target
+}
+
+/**
+* assign descriptor with property `key` from source to target
+* @private
+*/
+function _descriptor (opts, source, target, key) {
+  let desc = Object.getOwnPropertyDescriptor(source, key)
+  if (desc) {
+    if (desc.writable) {
+      desc.value = _clone(opts, desc.value)
+    }
+    try {
+      Object.defineProperty(target, key, desc)
+    } catch (e) {
+      // Safari throws with TypeError:
+      //  Attempting to change access mechanism for an unconfigurable property.
+      //  Attempting to change value of a readonly property.
+      if (!'Attempting to change'.indexOf(e.message)) {
+        throw e
+      }
+    }
+  }
 }
 
 /**

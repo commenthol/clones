@@ -71,6 +71,19 @@ source.fn = source.fn.bind({number: 29})        // bind `this` for `source`
 assert.equal(dest.fn(), source.fn() + 1)        // returning the same result
 ```
 
+### Clone prototypes or classes
+
+```js
+const clones = require('clones')
+// clone built in `Array`
+const C = clones.classes(Array)
+
+let c = new C(1,2,3)
+// => [1, 2, 3]
+c.reverse()
+// => [3, 2, 1]
+```
+
 ## License
 
 [MIT](./LICENSE)

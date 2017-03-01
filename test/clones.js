@@ -1,11 +1,11 @@
 /* global describe, it */
 
 var assert = require('assert')
-var clone = require('..')
+var clones = require('..')
 
 var isBrowser = (typeof window !== 'undefined')
 
-describe('#clone', function () {
+describe('#clones', function () {
   var tests = [
     ['Null', null],
     ['Undefined', undefined],
@@ -24,7 +24,7 @@ describe('#clone', function () {
     var inp = test[1]
     var isRef = test[2]
     it('should clone ' + tcase, function () {
-      var res = clone(inp)
+      var res = clones(inp)
       assert.deepEqual(res, inp)
       assert.equal(toType(res), toType(inp))
       if (isRef) {
@@ -36,7 +36,7 @@ describe('#clone', function () {
   if (!isBrowser) {
     it('should clone Buffer', function () {
       var inp = new Buffer('Hello')
-      var res = clone(inp)
+      var res = clones(inp)
       assert.ok(res !== inp)
       assert.equal(toType(res), toType(inp))
       assert.equal(res.toString(), inp.toString())
@@ -45,7 +45,7 @@ describe('#clone', function () {
 
   it('should clone Error', function () {
     var inp = new Error('boom')
-    var res = clone(inp)
+    var res = clones(inp)
     assert.ok(res !== inp)
     assert.equal(toType(res), toType(inp))
     assert.equal(res.message, inp.message)
@@ -54,7 +54,7 @@ describe('#clone', function () {
 
   it('should clone TypeError', function () {
     var inp = new TypeError('boom')
-    var res = clone(inp)
+    var res = clones(inp)
     assert.ok(res !== inp)
     assert.equal(toType(res), toType(inp))
     assert.equal(res.message, inp.message)
@@ -63,7 +63,7 @@ describe('#clone', function () {
 
   it('should clone Object of Objects', function () {
     var inp = {a: {b: {c: 3}}}
-    var res = clone(inp)
+    var res = clones(inp)
     assert.ok(res !== inp)
     assert.equal(toType(res), toType(inp))
     assert.ok(res.a.b !== inp.a.b)
@@ -72,7 +72,7 @@ describe('#clone', function () {
 
   it('should clone Object of Array of Objects', function () {
     var inp = {a: [{b: {c: 3}}]}
-    var res = clone(inp)
+    var res = clones(inp)
     assert.ok(res !== inp)
     assert.ok(res.a !== inp.a)
     assert.ok(res.a[0] !== inp.a[0])
@@ -81,7 +81,7 @@ describe('#clone', function () {
 
   it('should clone Array of Objects', function () {
     var inp = [{a: 1}, {b: 2}]
-    var res = clone(inp)
+    var res = clones(inp)
     assert.ok(res !== inp)
     assert.equal(toType(res), toType(inp))
     assert.ok(res[0] !== inp[0])
@@ -90,7 +90,7 @@ describe('#clone', function () {
 
   it('should clone Array of Objects of Objects', function () {
     var inp = [{a: {b: 1}}, {c: {d: 2}}, 3, '4']
-    var res = clone(inp)
+    var res = clones(inp)
     assert.ok(res !== inp)
     assert.ok(res[0] !== inp[0])
     assert.ok(res[0].a !== inp[0].a)
@@ -99,7 +99,7 @@ describe('#clone', function () {
 
   it('should clone function', function () {
     var inp = function () { return 42 }
-    var res = clone(inp)
+    var res = clones(inp)
     assert.ok(res !== inp)
     assert.equal(toType(res), toType(inp))
     assert.equal(res(), 42)
@@ -108,7 +108,7 @@ describe('#clone', function () {
   it('should clone function with props', function () {
     var inp = function () { return 42 }
     inp.test = {a: 1, b: 2}
-    var res = clone(inp)
+    var res = clones(inp)
     assert.ok(res !== inp)
     assert.equal(res(), 42)
     assert.ok(res.test !== inp.test)
@@ -117,17 +117,21 @@ describe('#clone', function () {
 
   it('should clone Array of functions', function () {
     var inp = [function () { return 1 }, function () { return 2 }]
-    var res = clone(inp)
+    var res = clones(inp)
     assert.ok(res !== inp)
     assert.ok(res[0] !== inp[0])
     assert.equal(res[0](), inp[0]())
     assert.equal(res[1](), inp[1]())
+    // can be overwritten
+    res[0] = 1
+    assert.ok(res[0] !== inp[0])
+    assert.ok(typeof inp[0], 'function')
   })
 
   it('should bind cloned function', function () {
     var inp = function () { return this.test() }
     var ctx = {test: function () { return 42 }}
-    var res = clone(inp, ctx)
+    var res = clones(inp, ctx)
     assert.ok(res !== inp)
     assert.equal(res(), 42)
   })
@@ -135,7 +139,7 @@ describe('#clone', function () {
   it('should bind cloned function in Object of Array', function () {
     var inp = {a: [function () { return this.test() }]}
     var ctx = {test: function () { return 42 }}
-    var res = clone(inp, ctx)
+    var res = clones(inp, ctx)
     assert.ok(res !== inp)
     assert.equal(res.a[0](), 42)
   })
@@ -144,7 +148,7 @@ describe('#clone', function () {
     var inp = {a: {b: 1}}
     inp.a.c = inp.a
     // console.log(inp)
-    var res = clone(inp)
+    var res = clones(inp)
     assert.ok(res !== inp)
     assert.ok(res.a.c === res.a) // is circular
   })
@@ -158,9 +162,7 @@ describe('#clone', function () {
     // adding circularity
     source.obj.a.e = source.obj.a
     // do the cloneing (with binding a context)
-    var dest = clone(source, {number: 30})
-
-    // console.log(dest)
+    var dest = clones(source, {number: 30})
 
     // checks
     assert.ok(dest !== source)                      // has different reference
@@ -181,7 +183,7 @@ describe('#clone', function () {
 
     it('should be different', function () {
       inp = Math
-		  res = clone(inp)
+      res = clones(inp)
       assert.ok(res !== inp)
     })
     it('should now be of type Object', function () {
@@ -211,7 +213,7 @@ describe('#clone', function () {
 
     it('should be different', function () {
       inp = JSON
-      res = clone(inp)
+      res = clones(inp)
       assert.ok(res !== inp)
     })
     it('should now be of type Object', function () {
@@ -230,7 +232,7 @@ describe('#clone', function () {
 
   it('should clone the console object', function () {
     var inp = console
-    var res = clone(inp, inp)
+    var res = clones(inp, inp)
     assert.ok(res !== inp)
     assert.ok(res.log !== inp.log)
     res.log('works')
@@ -239,7 +241,7 @@ describe('#clone', function () {
   if (!isBrowser) {
     it('should clone global object', function () {
       var inp = global
-      var res = clone(inp, global)
+      var res = clones(inp, global)
       assert.ok(res !== inp)
       assert.ok(res.global !== inp.global) // circular obj is cloned
     })
@@ -249,13 +251,13 @@ describe('#clone', function () {
     it('should clone window object', function () {
       this.timeout(10000) // need this timeout on edge
       var inp = window
-      var res = clone(inp, window)
+      var res = clones(inp)
       assert.ok(res !== inp)
     })
     it('should clone document object', function () {
       this.timeout(10000) // need this timeout on edge
       var inp = document
-      var res = clone(inp)
+      var res = clones(inp)
       assert.ok(res !== inp)
       // append an element to body
       var div = res.createElement('DIV')
@@ -272,6 +274,86 @@ describe('#clone', function () {
       assert.ok(inp.createElement !== undefined)
     })
   }
+
+  describe('should clone built-in object', function () {
+    it('Array', function () {
+      var C = clones.classes(Array)
+      var a = new Array(1, 2, 3) // eslint-disable-line no-array-constructor
+      var c = new C(1, 2, 3)
+      assert.ok(C !== Array)
+      assert.ok(C.prototype !== Array.prototype)
+      assert.ok(C.prototype.reverse !== Array.prototype.reverse)
+      assert.equal(a.reverse().join('#'), c.reverse().join('#'))
+      // should protect against overwriting
+      c.reverse = 1
+      C.prototype.reverse = 0
+      assert.equal(typeof Array.prototype.reverse, 'function')
+    })
+
+    it('Object', function () {
+      var C = clones.classes(Object)
+      var a = Object.assign({b: 2}, new Object({a: 1})) // eslint-disable-line no-new-object
+      var c = C.assign({b: 2}, new C({a: 1}))
+      assert.ok(C !== Object)
+      assert.ok(C.prototype !== Object.prototype)
+      assert.ok(C.assign !== Object.assign)
+      assert.deepEqual(a, c)
+    })
+
+    it('Function', function () {
+      var C = clones.classes(Function)
+      var a = new Function('return "test"') // eslint-disable-line no-new-func
+      var c = new C('return "test"')
+      assert.ok(C !== Function)
+      assert.ok(C.prototype !== Function.prototype)
+      assert.ok(C.prototype.apply !== Function.prototype.apply)
+      assert.equal(a(), c())
+    })
+
+    it('Date', function () {
+      var C = clones.classes(Date)
+      var a = new Date('2000-02-29').toISOString()
+      var c = new C('2000-02-29').toISOString()
+      assert.ok(C !== Date)
+      assert.ok(C.prototype !== Date.prototype)
+      assert.ok(C.prototype.toISOString !== Date.prototype.toISOString)
+      assert.equal(a, c)
+    })
+
+    it('RegExp', function () {
+      var C = clones.classes(RegExp)
+      var a = new RegExp('(fo+).*', 'ig')
+      var c = new C('(fo+).*', 'ig')
+      assert.ok(C !== RegExp)
+      assert.ok(C.prototype !== RegExp.prototype)
+      assert.ok(C.prototype.test !== RegExp.prototype.test)
+      assert.deepEqual([].concat(a.exec('faFoofafoobaFoobar')), ['FoofafoobaFoobar', 'Foo'])
+      assert.deepEqual([].concat(c.exec('faFoofafoobaFoobar')), ['FoofafoobaFoobar', 'Foo'])
+    })
+
+    it('String', function () {
+      var C = clones.classes(String)
+      var a = 'ababc'
+      var c = new C('ababc')
+      assert.ok(C !== String)
+      assert.ok(C.prototype !== String.prototype)
+      assert.ok(C.prototype.substring !== String.prototype.substring)
+      assert.ok(a !== c)
+      assert.equal(a.toString(), c.toString())
+      assert.equal(a.substring(2), c.substring(2))
+    })
+
+    it('Uint8Array', function () {
+      var C = clones.classes(Uint8Array)
+      var a = new Uint8Array([1, 2, 3])
+      var c = new C([1, 2, 3])
+      assert.ok(C !== Uint8Array)
+      assert.ok(C.prototype !== Uint8Array.prototype)
+      assert.ok(a !== c)
+      // console.log(a, c)
+      assert.equal(a.length, c.length)
+    })
+  })
 })
 
 function toType (o) {

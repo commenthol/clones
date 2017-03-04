@@ -1,6 +1,6 @@
 {
   "name": "clones",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "should deep clone everything even global objects, functions, circularities, ...",
   "author": "commenthol <commenthol@gmail.com>",
   "license": "MIT",

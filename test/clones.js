@@ -5,6 +5,11 @@ var clones = require('..')
 
 var isBrowser = (typeof window !== 'undefined')
 
+// zuul testing needs some special treatment
+if (typeof assert.deepStrictEqual === 'undefined') {
+  assert.deepStrictEqual = assert.deepEqual // eslint-disable-line
+}
+
 describe('#clones', function () {
   var tests = [
     ['Null', null],
@@ -15,7 +20,7 @@ describe('#clones', function () {
     ['Array', [1, '2', false], true],
     ['Uint8Array', new Uint8Array([1, 2, 3]), true],
     ['Float32Array', new Float32Array([1.1, 2.22, 3.333]), true],
-    ['Object', {a: 1, b: 2}, true],
+    ['Object', { a: 1, b: 2 }, true],
     ['Date', new Date('1970-01-01T00:00:00'), true],
     ['RegExp', new RegExp('test', 'gim'), true]
   ]
@@ -25,8 +30,8 @@ describe('#clones', function () {
     var isRef = test[2]
     it('should clone ' + tcase, function () {
       var res = clones(inp)
-      assert.deepEqual(res, inp)
-      assert.equal(toType(res), toType(inp))
+      assert.deepStrictEqual(res, inp)
+      assert.strictEqual(toType(res), toType(inp))
       if (isRef) {
         assert.ok(res !== inp)
       }
@@ -35,11 +40,11 @@ describe('#clones', function () {
 
   if (!isBrowser) {
     it('should clone Buffer', function () {
-      var inp = new Buffer('Hello')
+      var inp = Buffer.from('Hello')
       var res = clones(inp)
       assert.ok(res !== inp)
-      assert.equal(toType(res), toType(inp))
-      assert.equal(res.toString(), inp.toString())
+      assert.strictEqual(toType(res), toType(inp))
+      assert.strictEqual(res.toString(), inp.toString())
     })
   }
 
@@ -47,72 +52,72 @@ describe('#clones', function () {
     var inp = new Error('boom')
     var res = clones(inp)
     assert.ok(res !== inp)
-    assert.equal(toType(res), toType(inp))
-    assert.equal(res.message, inp.message)
-    assert.equal(res.stack, inp.stack)
+    assert.strictEqual(toType(res), toType(inp))
+    assert.strictEqual(res.message, inp.message)
+    assert.strictEqual(res.stack, inp.stack)
   })
 
   it('should clone TypeError', function () {
     var inp = new TypeError('boom')
     var res = clones(inp)
     assert.ok(res !== inp)
-    assert.equal(toType(res), toType(inp))
-    assert.equal(res.message, inp.message)
-    assert.equal(res.stack, inp.stack)
+    assert.strictEqual(toType(res), toType(inp))
+    assert.strictEqual(res.message, inp.message)
+    assert.strictEqual(res.stack, inp.stack)
   })
 
   it('should clone Object of Objects', function () {
-    var inp = {a: {b: {c: 3}}}
+    var inp = { a: { b: { c: 3 } } }
     var res = clones(inp)
     assert.ok(res !== inp)
-    assert.equal(toType(res), toType(inp))
+    assert.strictEqual(toType(res), toType(inp))
     assert.ok(res.a.b !== inp.a.b)
-    assert.deepEqual(res.a.b, inp.a.b)
+    assert.deepStrictEqual(res.a.b, inp.a.b)
   })
 
   it('should clone Object of Array of Objects', function () {
-    var inp = {a: [{b: {c: 3}}]}
+    var inp = { a: [{ b: { c: 3 } }] }
     var res = clones(inp)
     assert.ok(res !== inp)
     assert.ok(res.a !== inp.a)
     assert.ok(res.a[0] !== inp.a[0])
-    assert.deepEqual(res, inp)
+    assert.deepStrictEqual(res, inp)
   })
 
   it('should clone Array of Objects', function () {
-    var inp = [{a: 1}, {b: 2}]
+    var inp = [{ a: 1 }, { b: 2 }]
     var res = clones(inp)
     assert.ok(res !== inp)
-    assert.equal(toType(res), toType(inp))
+    assert.strictEqual(toType(res), toType(inp))
     assert.ok(res[0] !== inp[0])
-    assert.deepEqual(res, inp)
+    assert.deepStrictEqual(res, inp)
   })
 
   it('should clone Array of Objects of Objects', function () {
-    var inp = [{a: {b: 1}}, {c: {d: 2}}, 3, '4']
+    var inp = [{ a: { b: 1 } }, { c: { d: 2 } }, 3, '4']
     var res = clones(inp)
     assert.ok(res !== inp)
     assert.ok(res[0] !== inp[0])
     assert.ok(res[0].a !== inp[0].a)
-    assert.deepEqual(res, inp)
+    assert.deepStrictEqual(res, inp)
   })
 
   it('should clone function', function () {
     var inp = function () { return 42 }
     var res = clones(inp)
     assert.ok(res !== inp)
-    assert.equal(toType(res), toType(inp))
-    assert.equal(res(), 42)
+    assert.strictEqual(toType(res), toType(inp))
+    assert.strictEqual(res(), 42)
   })
 
   it('should clone function with props', function () {
     var inp = function () { return 42 }
-    inp.test = {a: 1, b: 2}
+    inp.test = { a: 1, b: 2 }
     var res = clones(inp)
     assert.ok(res !== inp)
-    assert.equal(res(), 42)
+    assert.strictEqual(res(), 42)
     assert.ok(res.test !== inp.test)
-    assert.deepEqual(res.test, inp.test)
+    assert.deepStrictEqual(res.test, inp.test)
   })
 
   it('should clone Array of functions', function () {
@@ -120,8 +125,8 @@ describe('#clones', function () {
     var res = clones(inp)
     assert.ok(res !== inp)
     assert.ok(res[0] !== inp[0])
-    assert.equal(res[0](), inp[0]())
-    assert.equal(res[1](), inp[1]())
+    assert.strictEqual(res[0](), inp[0]())
+    assert.strictEqual(res[1](), inp[1]())
     // can be overwritten
     res[0] = 1
     assert.ok(res[0] !== inp[0])
@@ -130,22 +135,22 @@ describe('#clones', function () {
 
   it('should bind cloned function', function () {
     var inp = function () { return this.test() }
-    var ctx = {test: function () { return 42 }}
+    var ctx = { test: function () { return 42 } }
     var res = clones(inp, ctx)
     assert.ok(res !== inp)
-    assert.equal(res(), 42)
+    assert.strictEqual(res(), 42)
   })
 
   it('should bind cloned function in Object of Array', function () {
-    var inp = {a: [function () { return this.test() }]}
-    var ctx = {test: function () { return 42 }}
+    var inp = { a: [function () { return this.test() }] }
+    var ctx = { test: function () { return 42 } }
     var res = clones(inp, ctx)
     assert.ok(res !== inp)
-    assert.equal(res.a[0](), 42)
+    assert.strictEqual(res.a[0](), 42)
   })
 
   it('should clone a circular object', function () {
-    var inp = {a: {b: 1}}
+    var inp = { a: { b: 1 } }
     inp.a.c = inp.a
     // console.log(inp)
     var res = clones(inp)
@@ -155,26 +160,26 @@ describe('#clones', function () {
 
   it('should clone everything', function () {
     var source = {
-      obj: {a: {b: 1}, d: new Date()},
-      arr: [true, 1, {c: 'dee'}],
+      obj: { a: { b: 1 }, d: new Date() },
+      arr: [true, 1, { c: 'dee' }],
       fn: function () { return this.number + 12 }
     }
     // adding circularity
     source.obj.a.e = source.obj.a
     // do the cloneing (with binding a context)
-    var dest = clones(source, {number: 30})
+    var dest = clones(source, { number: 30 })
 
     // checks
-    assert.ok(dest !== source)                      // has different reference
-    assert.ok(dest.obj !== source.obj)              // has different reference
-    assert.ok(dest.obj.a !== source.obj.a)          // has different reference
-    assert.ok(dest.obj.d !== source.obj.d)          // has different reference
-    assert.equal(dest.obj.d.toISOString(),
-      source.obj.d.toISOString())                   // has same content
-    assert.ok(dest.obj.a.e !== source.obj.a.e)      // different references for circularities
-    assert.ok(dest.fn !== source.fn)                // has different function reference
-    source.fn = source.fn.bind({number: 29})        // bind `this` for `source`
-    assert.equal(dest.fn(), source.fn() + 1)        // returning the same result
+    assert.ok(dest !== source) // has different reference
+    assert.ok(dest.obj !== source.obj) // has different reference
+    assert.ok(dest.obj.a !== source.obj.a) // has different reference
+    assert.ok(dest.obj.d !== source.obj.d) // has different reference
+    assert.strictEqual(dest.obj.d.toISOString(),
+      source.obj.d.toISOString()) // has same content
+    assert.ok(dest.obj.a.e !== source.obj.a.e) // different references for circularities
+    assert.ok(dest.fn !== source.fn) // has different function reference
+    source.fn = source.fn.bind({ number: 29 }) // bind `this` for `source`
+    assert.strictEqual(dest.fn(), source.fn() + 1) // returning the same result
   })
 
   describe('should clone the Math object', function () {
@@ -187,7 +192,7 @@ describe('#clones', function () {
       assert.ok(res !== inp)
     })
     it('should now be of type Object', function () {
-      assert.equal(toType(res), 'Object')
+      assert.strictEqual(toType(res), 'Object')
     })
     Object.getOwnPropertyNames(Math).forEach(function (key) {
       it(key, function () {
@@ -195,13 +200,13 @@ describe('#clones', function () {
           assert.ok(res[key] !== inp[key])
           if (inp[key].length === 1) {
             var same = (key === 'acosh' ? 1.2 : 0.5)
-            assert.equal(res[key](same), inp[key](same))
+            assert.strictEqual(res[key](same), inp[key](same))
           } else if (inp[key].length === 2) {
-            assert.equal(res[key](0.5, 2), inp[key](0.5, 2))
+            assert.strictEqual(res[key](0.5, 2), inp[key](0.5, 2))
           }
         } else {
           // Math constants
-          assert.equal(res[key], inp[key])
+          assert.strictEqual(res[key], inp[key])
         }
       })
     })
@@ -217,7 +222,7 @@ describe('#clones', function () {
       assert.ok(res !== inp)
     })
     it('should now be of type Object', function () {
-      assert.equal(toType(res), 'Object')
+      assert.strictEqual(toType(res), 'Object')
     })
     it('should give the same result', function () {
       var same = '{"a":1,"b":2,"c":{"d":"three"}}'
@@ -263,12 +268,12 @@ describe('#clones', function () {
       var div = res.createElement('DIV')
       div.innerHTML = 'works'
       var body = res.querySelector('body')
-      assert.equal(toString.call(body), '[object HTMLBodyElement]')
+      assert.strictEqual(toString.call(body), '[object HTMLBodyElement]')
       body.appendChild(div)
-      assert.equal(body.lastChild.innerHTML, 'works')
+      assert.strictEqual(body.lastChild.innerHTML, 'works')
       // element should not be part of original DOM
       var body0 = inp.querySelector('body')
-      assert.equal(body0.lastChild.innerHTML, undefined)
+      assert.strictEqual(body0.lastChild.innerHTML, undefined)
       // overwriting a function does not harm original
       res.createElement = undefined
       assert.ok(inp.createElement !== undefined)
@@ -283,21 +288,21 @@ describe('#clones', function () {
       assert.ok(C !== Array)
       assert.ok(C.prototype !== Array.prototype)
       assert.ok(C.prototype.reverse !== Array.prototype.reverse)
-      assert.equal(a.reverse().join('#'), c.reverse().join('#'))
+      assert.strictEqual(a.reverse().join('#'), c.reverse().join('#'))
       // should protect against overwriting
       c.reverse = 1
       C.prototype.reverse = 0
-      assert.equal(typeof Array.prototype.reverse, 'function')
+      assert.strictEqual(typeof Array.prototype.reverse, 'function')
     })
 
     it('Object', function () {
       var C = clones.classes(Object)
-      var a = Object.assign({b: 2}, new Object({a: 1})) // eslint-disable-line no-new-object
-      var c = C.assign({b: 2}, new C({a: 1}))
+      var a = Object.assign({ b: 2 }, new Object({ a: 1 })) // eslint-disable-line no-new-object
+      var c = C.assign({ b: 2 }, new C({ a: 1 }))
       assert.ok(C !== Object)
       assert.ok(C.prototype !== Object.prototype)
       assert.ok(C.assign !== Object.assign)
-      assert.deepEqual(a, c)
+      assert.deepStrictEqual(a, c)
     })
 
     it('Function', function () {
@@ -307,7 +312,7 @@ describe('#clones', function () {
       assert.ok(C !== Function)
       assert.ok(C.prototype !== Function.prototype)
       assert.ok(C.prototype.apply !== Function.prototype.apply)
-      assert.equal(a(), c())
+      assert.strictEqual(a(), c())
     })
 
     it('Date', function () {
@@ -317,7 +322,7 @@ describe('#clones', function () {
       assert.ok(C !== Date)
       assert.ok(C.prototype !== Date.prototype)
       assert.ok(C.prototype.toISOString !== Date.prototype.toISOString)
-      assert.equal(a, c)
+      assert.strictEqual(a, c)
     })
 
     it('RegExp', function () {
@@ -327,8 +332,8 @@ describe('#clones', function () {
       assert.ok(C !== RegExp)
       assert.ok(C.prototype !== RegExp.prototype)
       assert.ok(C.prototype.test !== RegExp.prototype.test)
-      assert.deepEqual([].concat(a.exec('faFoofafoobaFoobar')), ['FoofafoobaFoobar', 'Foo'])
-      assert.deepEqual([].concat(c.exec('faFoofafoobaFoobar')), ['FoofafoobaFoobar', 'Foo'])
+      assert.deepStrictEqual([].concat(a.exec('faFoofafoobaFoobar')), ['FoofafoobaFoobar', 'Foo'])
+      assert.deepStrictEqual([].concat(c.exec('faFoofafoobaFoobar')), ['FoofafoobaFoobar', 'Foo'])
     })
 
     it('String', function () {
@@ -339,8 +344,8 @@ describe('#clones', function () {
       assert.ok(C.prototype !== String.prototype)
       assert.ok(C.prototype.substring !== String.prototype.substring)
       assert.ok(a !== c)
-      assert.equal(a.toString(), c.toString())
-      assert.equal(a.substring(2), c.substring(2))
+      assert.strictEqual(a.toString(), c.toString())
+      assert.strictEqual(a.substring(2), c.substring(2))
     })
 
     it('Uint8Array', function () {
@@ -351,7 +356,7 @@ describe('#clones', function () {
       assert.ok(C.prototype !== Uint8Array.prototype)
       assert.ok(a !== c)
       // console.log(a, c)
-      assert.equal(a.length, c.length)
+      assert.strictEqual(a.length, c.length)
     })
   })
 })

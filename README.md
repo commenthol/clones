@@ -10,10 +10,10 @@ Runs on node and in modern browsers:
 
 |                | Versions |
 | ---            | ---      |
-| **node**       | ~~0.12~~, 4, 6, 7  |
-| **Chrome**     | 55, 56   |
-| **Firefox**    | 45, 51   |
-| **Edge**       | 14       |
+| **node**       | ~~0.12~~, 4, 6, 8, 10, 11  |
+| **Chrome**     | 55, 56, 71 |
+| **Firefox**    | 45, 51, 64 |
+| **Edge**       | 14, 16   |
 | **IE**         | ~~11~~   |
 | **Safari**     | 10       |
 | **iOS Safari** | 10       |

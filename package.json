@@ -1,6 +1,6 @@
 {
   "name": "clones",
-  "version": "1.2.0-0",
+  "version": "1.2.0",
   "description": "should deep clone everything even global objects, functions, circularities, ...",
   "keywords": [
     "circular",

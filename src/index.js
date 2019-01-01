@@ -1,35 +1,35 @@
 /**
-* @copyright 2017 commenthol
-* @license MIT
-*/
+ * @copyright 2017- commenthol
+ * @license MIT
+ */
 
 module.exports = clones
 
 /**
-* A Deep-Clone of object `source`
-*
-* @static
-* @param {Object} source - clone source
-* @param {Object} [bind] - bind functions to this context
-* @return {Any} deep clone of `source`
-* @example
-* const clones = require('clones')
-*
-* const source = [
-*   {a: {b: 1}},
-*   {c: {d: 2}},
-*   '3',
-*   function () { return 4 }
-* ]
-* // adding circularities
-* source[0].a.e = source[0].a
-*
-* const dest = clones(source)
-* // => [{ a: { b: 1, e: [Circular] } },
-* //     { c: { d: 2 } },
-* //     '3',
-* //     [Function] ]
-*/
+ * A Deep-Clone of object `source`
+ *
+ * @static
+ * @param {Object} source - clone source
+ * @param {Object} [bind] - bind functions to this context
+ * @return {Any} deep clone of `source`
+ * @example
+ * const clones = require('clones')
+ *
+ * const source = [
+ *   {a: {b: 1}},
+ *   {c: {d: 2}},
+ *   '3',
+ *   function () { return 4 }
+ * ]
+ * // adding circularities
+ * source[0].a.e = source[0].a
+ *
+ * const dest = clones(source)
+ * // => [{ a: { b: 1, e: [Circular] } },
+ * //     { c: { d: 2 } },
+ * //     '3',
+ * //     [Function] ]
+ */
 function clones (source, bind, target) {
   let opts = {
     bind: bind,
@@ -40,20 +40,20 @@ function clones (source, bind, target) {
 }
 
 /**
-* clones prototype function / class
-* @static
-* @param {Object} source - clone source
-* @return {Any} deep clone of `source`
-* @example
-* const clones = require('clones')
-* // clone built in `Array`
-* const C = clones.classes(Array)
-*
-* let c = new C(1,2,3)
-* // => [1, 2, 3]
-* c.reverse()
-* // => [3, 2, 1]
-*/
+ * clones prototype function / class
+ * @static
+ * @param {Object} source - clone source
+ * @return {Any} deep clone of `source`
+ * @example
+ * const clones = require('clones')
+ * // clone built in `Array`
+ * const C = clones.classes(Array)
+ *
+ * let c = new C(1,2,3)
+ * // => [1, 2, 3]
+ * c.reverse()
+ * // => [3, 2, 1]
+ */
 clones.classes = function (source) {
   let target = function (a, b, c, d, e, f, g, h, i) {
     try {
@@ -67,17 +67,17 @@ clones.classes = function (source) {
 }
 
 /**
-* Recursively clone source
-*
-* @static
-* @private
-* @param {Object} opts - options
-* @param {Object} [opts.bind] - optional bind for function clones
-* @param {Array} opts.visited - visited references to detect circularities
-* @param {Array} opts.cloned - visited references of clones to assign circularities
-* @param {Any} source - The object to clone
-* @return {Any} deep clone of `source`
-*/
+ * Recursively clone source
+ *
+ * @static
+ * @private
+ * @param {Object} opts - options
+ * @param {Object} [opts.bind] - optional bind for function clones
+ * @param {Array} opts.visited - visited references to detect circularities
+ * @param {Array} opts.cloned - visited references of clones to assign circularities
+ * @param {Any} source - The object to clone
+ * @return {Any} deep clone of `source`
+ */
 function _clone (opts, source, target) {
   let type = toType(source)
   switch (type) {
@@ -87,8 +87,8 @@ function _clone (opts, source, target) {
     case 'Null':
     case 'Undefined':
     case 'Symbol':
-    case 'DOMPrototype':  // (browser)
-    case 'process':       // (node) cloning this is not a good idea
+    case 'DOMPrototype': // (browser)
+    case 'process': // (node) cloning this is not a good idea
       target = source
       break
     case 'Function':
@@ -176,15 +176,15 @@ function _clone (opts, source, target) {
 }
 
 /**
-* Clone property while cloning circularities
-*
-* @static
-* @private
-* @param {Object} opts - options
-* @param {Any} source - source object
-* @param {Any} [target] - target object
-* @returns {Any} target
-*/
+ * Clone property while cloning circularities
+ *
+ * @static
+ * @private
+ * @param {Object} opts - options
+ * @param {Any} source - source object
+ * @param {Any} [target] - target object
+ * @returns {Any} target
+ */
 function _props (opts, source, target) {
   let idx = opts.visited.indexOf(source) // check for circularities
   if (idx === -1) {
@@ -196,9 +196,9 @@ function _props (opts, source, target) {
         Object.getOwnPropertyNames(source[key]).forEach(function (p) {
           if (p !== 'constructor') {
             _descriptor(opts, source[key], target[key], p)
-          // } else {
-          //   target[key][p] = target
-          //   Safari may throw here with TypeError: Attempted to assign to readonly property.
+            // } else {
+            //   target[key][p] = target
+            //   Safari may throw here with TypeError: Attempted to assign to readonly property.
           }
         })
       } else {
@@ -214,9 +214,9 @@ function _props (opts, source, target) {
 }
 
 /**
-* assign descriptor with property `key` from source to target
-* @private
-*/
+ * assign descriptor with property `key` from source to target
+ * @private
+ */
 function _descriptor (opts, source, target, key) {
   let desc = Object.getOwnPropertyDescriptor(source, key)
   if (desc) {
@@ -237,8 +237,8 @@ function _descriptor (opts, source, target, key) {
 }
 
 /**
-* @private
-*/
+ * @private
+ */
 function toType (o) {
   return toString.call(o).replace(/^\[[a-z]+ (.*)\]$/, '$1')
 }
